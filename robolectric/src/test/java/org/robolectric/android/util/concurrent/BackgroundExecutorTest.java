@@ -6,6 +6,7 @@ import static org.robolectric.android.util.concurrent.BackgroundExecutor.runInBa
 
 import android.os.Looper;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import java.util.concurrent.Callable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -16,7 +17,7 @@ import org.junit.runner.RunWith;
 public class BackgroundExecutorTest {
 
   @Test
-  public void doesNotRunOnMainLooper() {
+  public void forRunnable_doesNotRunOnMainLooper() {
     runInBackground(
         () -> {
           assertThat(Thread.currentThread())
@@ -26,9 +27,34 @@ public class BackgroundExecutorTest {
   }
 
   @Test
-  public void exceptionsPropogated() {
+  public void forRunnable_exceptionsPropogated() {
     try {
-      runInBackground(() -> {
+      runInBackground((Runnable) () -> {
+        throw new IllegalStateException("I failed");
+      });
+
+      fail("did not propagate exception");
+    } catch (IllegalStateException e) {
+      // expected
+    }
+  }
+
+  @Test
+  public void forCallable_doesNotRunOnMainLooper() {
+    boolean result = runInBackground(
+        () -> {
+          assertThat(Thread.currentThread())
+              .isNotSameInstanceAs(Looper.getMainLooper().getThread());
+          assertThat(Looper.myLooper()).isNotSameInstanceAs(Looper.getMainLooper());
+          return true;
+        });
+    assertThat(result).isTrue();
+  }
+
+  @Test
+  public void forCallable_exceptionsPropogated() {
+    try {
+      runInBackground((Callable<?>) () -> {
         throw new IllegalStateException("I failed");
       });
 
