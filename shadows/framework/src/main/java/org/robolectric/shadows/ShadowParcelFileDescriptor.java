@@ -1,5 +1,6 @@
 package org.robolectric.shadows;
 
+import static android.content.res.AssetFileDescriptor.UNKNOWN_LENGTH;
 import static android.os.Build.VERSION_CODES.KITKAT;
 import static org.robolectric.shadow.api.Shadow.invokeConstructor;
 import static org.robolectric.util.ReflectionHelpers.ClassParameter.from;
@@ -123,7 +124,8 @@ public class ShadowParcelFileDescriptor {
     try {
       return file.length();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      // This might occur when the file object has been closed.
+      return UNKNOWN_LENGTH;
     }
   }
 
